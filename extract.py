@@ -125,7 +125,7 @@ if __name__ == '__main__':
               predator_filename = os.path.join(arglist.data_dir, "predator", str(random_generated_int)+".npz") 
               recording_obs = [[]] * 5
               recording_action = [[]] * 5
-              recording_oppo_action = [[[]]* (arglist.agent_num-1)] * 5
+              recording_oppo_action = [[]]*5
 
               np.random.seed(random_generated_int)
               env.seed(random_generated_int)
@@ -135,6 +135,7 @@ if __name__ == '__main__':
               predator_model.reset()
               obs = env.reset() #
               for frame in range(arglist.max_frames):
+                act_traj = [collections.deque(np.zeros((arglist.timestep, arglist.action_space)), maxlen = arglist.timestep)] *( arglist.agent_num)
                 if arglist.render_mode:
                   env.render("human")
                 else:
@@ -149,30 +150,34 @@ if __name__ == '__main__':
                 action0 = prey_model.get_action(z0)
                 action_episode.append(action0)
                 recording_action[0].append(action0)
-                
+                act_traj[0].append(action0)
+
                 for i in range(1,5):
                   z1, mu1, logvar1 = predator_model.encode_obs(obs[i])
                   action1 = predator_model.get_action(z1)
                   action_episode.append(action1)
-                  recording_action[i].append(action1)  
+                  recording_action[i].append(action1) 
+                  act_traj[i].append(action1)
 
+                # print(np.array(act_traj).shape)  
+                for  i in range(5):
+                  recording_oppo_action[i].append(act_traj[i])
                 obs, rewards, done, _ = env.step(action_episode)  
                 if done: break
               total_frames += (frame+1)  
               print("dead at", frame+1, "total recorded frames for this worker", total_frames)
               recording_obs = np.array(recording_obs, dtype=np.uint8)
               recording_action = np.array(recording_action, dtype=np.float16)
-              np.savez_compressed(prey_filename, obs=recording_obs[0], action=recording_action[0], oppo_actions = recording_action[1:])
+              np.savez_compressed(prey_filename, obs=recording_obs[0], action=recording_action[0], oppo_actions = recording_oppo_action[1:])
               for i in range(1,5):
                 oppo_actions = []
-                oppo_actions.append(recording_action[0])
+                oppo_actions.append(recording_oppo_action[0])
                 for j in range(1,5):
                   if i ==j:
                     continue
                   else:
-                    oppo_actions.append(recording_action[i])
+                    oppo_actions.append(recording_oppo_action[i])
                 assert(len(oppo_actions)) == 4
-
                 np.savez_compressed(predator_filename, obs=recording_obs[i], action=recording_action[i], oppo_actions = oppo_actions )
             except gym.error.Error:
               print("stupid gym error, life goes on")
