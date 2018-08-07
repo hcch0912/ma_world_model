@@ -52,6 +52,7 @@ def parse_args():
     parser.add_argument("--agent_num", type = int, default = 2, help = "total number of agent")
     parser.add_argument("--action_space", type = int, default = 2, help = "action space for each agent")
     parser.add_argument("--supervise", type = bool, default = False, help = "supervise oppo_modelling ")
+    parser.add_argument("--inference", type = bool, default = False, help = "use inferred intent in policy or not")
     return parser.parse_args()
 
 
@@ -88,7 +89,7 @@ def sample(p):
 
 class Model:
   ''' simple one layer model for car racing '''
-  def __init__(self, arglist, action_space, scope,  load_model=True):
+  def __init__(self, arglist, action_space, scope,   load_model=True):
     self.action_space = action_space
     self.arglist = arglist
     self.vae = ConvVAE(batch_size=1, gpu_mode=False, is_training=False, reuse=True)
@@ -110,6 +111,7 @@ class Model:
     # action trajectories recording 
     self.act_traj = [collections.deque(np.zeros((arglist.timestep, arglist.action_space)), maxlen = arglist.timestep)] *(arglist.agent_num -1)
     self.oppo_model = Oppo_Model(arglist.agent_num, arglist.timestep, arglist.action_space,arglist.action_space, "oppo_model_{}".format(scope) )
+    self.inference = arglist.inference
 
     if EXP_MODE == MODE_Z_HIDDEN: # one hidden layer
       self.hidden_size = 40
@@ -141,22 +143,25 @@ class Model:
   def get_action(self,  z):
     h = rnn_output(self.state, z, EXP_MODE)
 
-    oppo_intents = []
-    for i in range(self.arglist.agent_num - 1):
-      act_traj = self.act_traj[i]
-      intent = self.oppo_model .get_inference(act_traj)
-      oppo_intents.append(intent)
-    oppo_intents = np.reshape(oppo_intents, ((self.arglist.agent_num-1 )* self.arglist.action_space))
-    '''
-    action = np.dot(h, self.weight) + self.bias
-    action[0] = np.tanh(action[0])
-    action[1] = sigmoid(action[1])
-    action[2] = clip(np.tanh(action[2]))
-    '''
-    #Oppo intent shape (batch_size, agent_num, action_space)
-    # reshape oppo_intent  agent_num * batch_size * action_space
-   
-    controller_input = np.concatenate((h, oppo_intents))
+    if self.arglist.inference:
+      oppo_intents = []
+      for i in range(self.arglist.agent_num - 1):
+        act_traj = self.act_traj[i]
+        intent = self.oppo_model .get_inference(act_traj)
+        oppo_intents.append(intent)
+      oppo_intents = np.reshape(oppo_intents, ((self.arglist.agent_num-1 )* self.arglist.action_space))
+      '''
+      action = np.dot(h, self.weight) + self.bias
+      action[0] = np.tanh(action[0])
+      action[1] = sigmoid(action[1])
+      action[2] = clip(np.tanh(action[2]))
+      '''
+      #Oppo intent shape (batch_size, agent_num, action_space)
+      # reshape oppo_intent  agent_num * batch_size * action_space
+     
+      controller_input = np.concatenate((h, oppo_intents))
+    else:
+       controller_input =  h  
     
     if EXP_MODE == MODE_Z_HIDDEN: # one hidden layer
       x = np.tanh(np.dot(controller_input, self.weight_hidden) + self.bias_hidden)
@@ -208,9 +213,9 @@ class Model:
     rnn_params = self.rnn.get_random_model_params(stdev=stdev)
     self.rnn.set_model_params(rnn_params)
 
-def make_model(arglist, action_space, scope, model_path = None, load_model=False):
+def make_model(arglist, action_space, scope,  model_path = None, load_model=False):
   # can be extended in the future.
-  model = Model( arglist, action_space,scope, load_model=load_model)
+  model = Model( arglist, action_space, scope, load_model=load_model)
   if load_model:
      model.load_model(model_path)
   else:
