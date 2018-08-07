@@ -62,7 +62,7 @@ def load_raw_data_list(filelist,arglist):
 
 def encode_batch(batch_img,arglist):
   simple_obs = np.copy(batch_img).astype(np.float)/255.0
-  simple_obs = simple_obs.reshape(len(simple_obs), 64, 64, 3)
+  simple_obs = simple_obs.reshape(arglist.batch_size, 64, 64, 3)
   mu, logvar = vae.encode_mu_logvar(simple_obs)
   z = (mu + np.exp(logvar/2.0) * np.random.randn(*logvar.shape))
 
@@ -107,8 +107,8 @@ if __name__ == '__main__':
     logvar_dataset = []
     for i in range(len(dataset)):
       data_batch = dataset[i]
-      # if len(data_batch) != arglist.batch_size:
-      #       break
+      if len(data_batch) != arglist.batch_size:
+            break
       if arglist.use_vae :      
         mu, logvar, z = encode_batch(data_batch, arglist)
         mu_dataset.append(mu.astype(np.float16))

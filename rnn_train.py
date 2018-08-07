@@ -133,7 +133,7 @@ if __name__ == '__main__':
     
     # save 1000 initial mu and logvars:
     if arglist.use_vae:
-      initial_mu = np.copy(data_mu[:1000, 0, :]*10000).astype(np.int).tolist()
+      initial_mu = np.copy(data_mu[:1000][ 0][:]*10000).astype(np.int).tolist()
       initial_logvar = np.copy(data_logvar[:1000][0][:]*10000).astype(np.int).tolist()
       with open(os.path.join("tf_initial_z", "initial_z.json"), 'wt') as outfile:
         json.dump([initial_mu, initial_logvar], outfile, sort_keys=True, indent=0, separators=(',', ': '))
