@@ -77,10 +77,10 @@ def default_hps():
                      output_dropout_prob=0.90,
                      is_training=1)
 
-def build_hps(arglist)：
+def build_hps(arglist):
   return HyperParams(num_steps=4000,
                      max_seq_len=999, # train on sequences of 1000 (so 999 + teacher forcing shift)
-                     input_seq_width=32 + int(arglist.action_space*arglsit.timestep*(arglsit.agent_num - 1)),    # width of our data (32 + 3 actions)
+                     input_seq_width=32 + int(arglist.action_space*arglist.timestep*(arglist.agent_num - 1)),    # width of our data (32 + 3 actions)
                      output_seq_width=32,    # width of our data is 32
                      rnn_size=256,    # number of rnn cells
                      batch_size=10,   # minibatch sizes
@@ -112,6 +112,7 @@ if __name__ == '__main__':
     raw_data = np.load(os.path.join(arglist.series_dir, "series.npz"))
     #print(raw_data.shape)
     # load preprocessed data
+    print(raw_data["mu"],raw_data["logvar"], raw_data["action"], raw_data["oppo_action"])
     data_mu = raw_data["mu"]
     data_logvar = raw_data["logvar"]
     data_action =  raw_data["action"]
@@ -139,7 +140,7 @@ if __name__ == '__main__':
       step = rnn.sess.run(rnn.global_step)
       curr_learning_rate = (hps.learning_rate-hps.min_learning_rate) * (hps.decay_rate) ** step + hps.min_learning_rate
 
-      raw_z, raw_a raw_oppo_a= random_batch()
+      raw_z, raw_a ,raw_oppo_a= random_batch()
       print(raw_z.shape, raw_a.shape, raw_oppo_a.shape)
       inputs = np.concatenate((raw_z[:, :-1, :], raw_a[:, :-1, :], [raw_oppo_a[:,:-1,:]]), axis=2)
       outputs = raw_z[:, 1:, :] # teacher forcing (shift by one predictions)
