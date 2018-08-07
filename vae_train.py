@@ -131,7 +131,7 @@ if __name__ == '__main__':
         # log.write('{}\n'.format(','.join(map(str, 
                     # [train_loss, r_loss, kl_loss, train_step]))))
         if ((train_step+1) % arglist.save_period == 0):
-          vae.save_json(os.path.join(arglist.model_save_path,"vae_{}.json".format(train_step =1)))
+          vae.save_json(os.path.join(arglist.model_save_path,"vae_{}.json".format(train_step +1)))
 
     # finished, final model:
     vae.save_json(os.path.join(arglist.model_save_path,"vae.json"))

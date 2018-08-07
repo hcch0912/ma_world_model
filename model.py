@@ -104,8 +104,10 @@ class Model:
 
     self.state = rnn_init_state(self.rnn)
     self.rnn_mode = True
-
-    self.input_size = rnn_output_size(EXP_MODE) +(arglist.agent_num-1)  * arglist.action_space
+    if arglist.inference: 
+      self.input_size = rnn_output_size(EXP_MODE) +(arglist.agent_num-1)  * arglist.action_space
+    else :
+      self.input_size =   rnn_output_size(EXP_MODE) 
     self.z_size = 32
 
     # action trajectories recording 

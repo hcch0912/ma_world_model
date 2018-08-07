@@ -39,6 +39,7 @@ def parse_args():
     parser.add_argument("--series_dir", type = str, default = "./series")
     parser.add_argument("--vae_path", type = str,default = "./tf_vae", help= "model save path")
     parser.add_argument("--z_size", type = int, default = 32, help = "z size")
+    parser.add_argument("--use_vae", type = bool, default = True, help = "use vae to get z or not")
     return parser.parse_args()
 
 
@@ -88,34 +89,45 @@ if __name__ == '__main__':
     dataset, action_dataset, oppo_action_dataset = load_raw_data_list(filelist, arglist)
 
     reset_graph()
+    if arglist.use_vae:
+      vae = ConvVAE(z_size=arglist.z_size,
+                    batch_size=arglist.batch_size,
+                    learning_rate=arglist.lr,
+                    kl_tolerance=arglist.kl_tolerance,
+                    is_training=False,
+                    reuse=False,
+                    gpu_mode=True) # use GPU on batchsize of 1000 -> much faster
 
-    vae = ConvVAE(z_size=arglist.z_size,
-                  batch_size=arglist.batch_size,
-                  learning_rate=arglist.lr,
-                  kl_tolerance=arglist.kl_tolerance,
-                  is_training=False,
-                  reuse=False,
-                  gpu_mode=True) # use GPU on batchsize of 1000 -> much faster
+      vae.load_json(os.path.join(arglist.vae_path, 'vae.json'))
 
-    vae.load_json(os.path.join(arglist.vae_path, 'vae.json'))
-
-    
+      
     mu_dataset = []
     logvar_dataset = []
+
     for i in range(len(dataset)):
       data_batch = dataset[i]
       if len(data_batch) != arglist.batch_size:
             break
-      mu, logvar, z = encode_batch(data_batch, arglist)
-      mu_dataset.append(mu.astype(np.float16))
-      logvar_dataset.append(logvar.astype(np.float16))
+      if arglist.use_vae :      
+        mu, logvar, z = encode_batch(data_batch, arglist)
+        mu_dataset.append(mu.astype(np.float16))
+        logvar_dataset.append(logvar.astype(np.float16))
+      
       if ((i+1) % 100 == 0):
         print(i+1)
 
     action_dataset = np.array(action_dataset)
-    mu_dataset = np.array(mu_dataset)
-    logvar_dataset = np.array(logvar_dataset)
-    oppo_action_dataset = np.array(oppo_action_dataset)
+    oppo_action_dataset = np.array(oppo_action_dataset)    
+    if arglist.use_vae:
+      mu_dataset = np.array(mu_dataset)
+      logvar_dataset = np.array(logvar_dataset)
+      np.savez_compressed(os.path.join(arglist.series_dir, "series.npz"), action=action_dataset, oppo_action= oppo_action_dataset, mu=mu_dataset, logvar=logvar_dataset)
+
+    else:  
+      obs_dataset = np.array(dataset)  
+      np.savez_compressed(os.path.join(arglist.series_dir, "series.npz"), action=action_dataset, oppo_action= oppo_action_dataset, obs = obs_dataset)
+
+    
 
 
-    np.savez_compressed(os.path.join(arglist.series_dir, "series.npz"), action=action_dataset, oppo_action= oppo_action_dataset, mu=mu_dataset, logvar=logvar_dataset)
+    

@@ -42,19 +42,27 @@ def parse_args():
     parser.add_argument("--series_dir", type = str, default = "./series")
     parser.add_argument("--agent_num", type = int, default = 2, help = "agent number in the env")
     parser.add_argument("--action_space", type = int, default = 2, help = "action space size for each agent")
+    parser.add_argument("--use_vae", type = bool, default = True, help ="use vae to get z")
     return parser.parse_args()
 
 
 
-def random_batch():
+def random_batch(arglist):
   indices = np.random.permutation(N_data)[0:batch_size]
-  mu = data_mu[indices]
-  logvar = data_logvar[indices]
   action = data_action[indices]
   oppo_action = data_oppo_action[indices]
-  s = logvar.shape
-  z = mu + np.exp(logvar/2.0) * np.random.randn(*s)
-  return z, action, oppo_action
+  if arglist.use_vae:
+    mu = data_mu[indices]
+    logvar = data_logvar[indices]
+    s = logvar.shape
+    z = mu + np.exp(logvar/2.0) * np.random.randn(*s)
+    return z, action, oppo_action
+  else:
+    obs = data_obs[indices]
+    return obs, action, oppo_action  
+  
+ 
+  
 
 def default_hps():
   return HyperParams(num_steps=4000,
@@ -112,22 +120,25 @@ if __name__ == '__main__':
     raw_data = np.load(os.path.join(arglist.series_dir, "series.npz"))
     #print(raw_data.shape)
     # load preprocessed data
-    print(raw_data["mu"],raw_data["logvar"], raw_data["action"], raw_data["oppo_action"])
-    data_mu = raw_data["mu"]
-    data_logvar = raw_data["logvar"]
+    if arglist.use_vae:
+      data_mu = raw_data["mu"]
+      data_logvar = raw_data["logvar"]
+    else:
+      data_obs = raw_data["obs"]  
     data_action =  raw_data["action"]
     data_oppo_action = raw_data["oppo_action"]
     max_seq_len = hps_model.max_seq_len
 
-    N_data = len(data_mu) # should be 10k
+    N_data = len(data_action) # should be 10k
     batch_size = hps_model.batch_size
     
-    print(data_mu.shape)
+    print(data_action.shape)
     # save 1000 initial mu and logvars:
-    initial_mu = np.copy(data_mu[:1000, 0, :]*10000).astype(np.int).tolist()
-    initial_logvar = np.copy(data_logvar[:1000, 0, :]*10000).astype(np.int).tolist()
-    with open(os.path.join("tf_initial_z", "initial_z.json"), 'wt') as outfile:
-      json.dump([initial_mu, initial_logvar], outfile, sort_keys=True, indent=0, separators=(',', ': '))
+    if arglist.use_vae:
+      initial_mu = np.copy(data_mu[:1000, 0, :]*10000).astype(np.int).tolist()
+      initial_logvar = np.copy(data_logvar[:1000, 0, :]*10000).astype(np.int).tolist()
+      with open(os.path.join("tf_initial_z", "initial_z.json"), 'wt') as outfile:
+        json.dump([initial_mu, initial_logvar], outfile, sort_keys=True, indent=0, separators=(',', ': '))
 
     reset_graph()
     rnn = MDNRNN(hps_model)
