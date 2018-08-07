@@ -107,8 +107,10 @@ if __name__ == '__main__':
     logvar_dataset = []
     for i in range(len(dataset)):
       data_batch = dataset[i]
-      if len(data_batch) != arglist.batch_size:
-            break
+      if len(data_batch) <= arglist.batch_size:
+            continue
+      else:
+         data_batch = data_batch[:arglist.batch_size]
       if arglist.use_vae :      
         mu, logvar, z = encode_batch(data_batch, arglist)
         mu_dataset.append(mu.astype(np.float16))
