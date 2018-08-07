@@ -85,8 +85,8 @@ if __name__ == '__main__':
     if not os.path.exists(arglist.model_save_path):
       os.makedirs(arglist.model_save_path)
 
-    log_path = './logs/{}_{}_{}.csv'.format(arglist.kl_tolerance, arglist.seed, time.time())
-    log = open(log_path, '+w', 1)
+    # log_path = './logs/{}_{}_{}.csv'.format(arglist.kl_tolerance, arglist.seed, time.time())
+    # log = open(log_path, '+w', 1)
     # load dataset from record/*. only use first 10K, sorted by filename.
     filelist = os.listdir(arglist.data_dir)
     filelist.sort()
@@ -128,8 +128,8 @@ if __name__ == '__main__':
         ], feed)
       
         print("step", (train_step+1), train_loss, r_loss, kl_loss)
-        log.write('{}\n'.format(','.join(map(str, 
-                    [train_loss, r_loss, kl_loss, train_step]))))
+        # log.write('{}\n'.format(','.join(map(str, 
+                    # [train_loss, r_loss, kl_loss, train_step]))))
         if ((train_step+1) % arglist.save_period == 0):
           vae.save_json(os.path.join(arglist.model_save_path,"vae.json"))
 

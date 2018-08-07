@@ -47,13 +47,13 @@ def load_raw_data_list(filelist,arglist):
   action_list = []
   oppo_action_list = []
   counter = 0
-  print(len(filelist))
+  
   for i in range(len(filelist)):
     filename = filelist[i]
     raw_data = np.load(os.path.join(arglist.data_dir, filename))
     data_list.append(raw_data['obs'])
     action_list.append(raw_data['action'])
-    oppo_action_list.append(raw_data['oppo_action'])
+    oppo_action_list.append(raw_data['oppo_actions'])
     if ((i+1) % 1000 == 0):
       print("loading file", (i+1))
   return data_list, action_list, oppo_action_list
