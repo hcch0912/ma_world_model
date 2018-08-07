@@ -9,6 +9,7 @@ from PIL import Image
 import argparse
 from util.make_env import *
 import util.tf_util as U 
+import collections
 
 def parse_args():
     parser = argparse.ArgumentParser("Reinforcement Learning experiments for stochastic games")
@@ -67,6 +68,7 @@ if __name__ == '__main__':
             recording_action = []
             recording_oppo_action = []
 
+
             np.random.seed(random_generated_int)
             env.seed(random_generated_int)
             # random policy
@@ -75,6 +77,7 @@ if __name__ == '__main__':
             obs = env.reset() # pixels
 
             for frame in range(arglist.max_frames):
+              act_traj = collections.deque(np.zeros((arglist.timestep, arglist.action_space)), maxlen = arglist.timestep)
               if arglist.render_mode:
                 env.render("human")
               else:
@@ -90,8 +93,9 @@ if __name__ == '__main__':
               z1, mu1, logvar1 = model.encode_obs(oppo_obs)
               action1 = model.get_action(z1)
 
+              act_traj.append(action1)
               recording_action.append(action0)
-              recording_oppo_action.append(action1)
+              recording_oppo_action.append(act_traj)
               obs, rewards, [act1, act2], goals, win = env.step([action0, action1])
               if win:
                 break
@@ -121,6 +125,8 @@ if __name__ == '__main__':
               predator_filename = os.path.join(arglist.data_dir, "predator", str(random_generated_int)+".npz") 
               recording_obs = [[]] * 5
               recording_action = [[]] * 5
+              recording_oppo_action = [[[]]* (arglist.agent_num-1)] * 5
+
               np.random.seed(random_generated_int)
               env.seed(random_generated_int)
               prey_model.init_random_model_params(stdev=np.random.rand()*0.01)
@@ -166,6 +172,7 @@ if __name__ == '__main__':
                   else:
                     oppo_actions.append(recording_action[i])
                 assert(len(oppo_actions)) == 4
+
                 np.savez_compressed(predator_filename, obs=recording_obs[i], action=recording_action[i], oppo_actions = oppo_actions )
             except gym.error.Error:
               print("stupid gym error, life goes on")

@@ -118,7 +118,9 @@ if __name__ == '__main__':
     hps_sample = hps_model._replace(batch_size=1, max_seq_len=1, use_recurrent_dropout=0, is_training=0)
 
     raw_data = np.load(os.path.join(arglist.series_dir, "series.npz"))
-    #print(raw_data.shape)
+    # print(raw_data.shape)
+    print(raw_data["mu"].shape)
+    print(raw_data["logvar"].shape)
     # load preprocessed data
     if arglist.use_vae:
       data_mu = raw_data["mu"]

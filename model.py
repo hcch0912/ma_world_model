@@ -178,7 +178,7 @@ class Model:
 
     # epsilon exploration
     if np.random.uniform(0,1) < 0.2:
-      action = [np.random.uniform(-3,3),np.random.uniform(-3,3)]
+      action = [np.random.uniform(-3,3)] * len(action)
     return action
 
   def set_model_params(self, model_params):

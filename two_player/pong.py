@@ -30,7 +30,11 @@ class PongObject:
 		self.pos = pos
 		self.vel = vel
 	def accelerate(paddle, acceleration):
-		v = paddle.vel 
+		# print(paddle.vel)
+		# print(acceleration)
+		if type(acceleration) is list:
+			acceleration = acceleration[0]
+		v = paddle.vel
 		sign_a = np.sign(acceleration)
 		if np.sign(v) == sign_a:
 			paddle.vel = 0.8*(v+acceleration)
@@ -106,6 +110,7 @@ class PongGame(Env):
 		else:	
 			pass
 		# print(acc1, acc2)	
+
 		self.paddle1.accelerate(acc1)
 		self.paddle2.accelerate(acc2)	
 
