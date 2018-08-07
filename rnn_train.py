@@ -118,9 +118,6 @@ if __name__ == '__main__':
     hps_sample = hps_model._replace(batch_size=1, max_seq_len=1, use_recurrent_dropout=0, is_training=0)
 
     raw_data = np.load(os.path.join(arglist.series_dir, "series.npz"))
-    # print(raw_data.shape)
-    print(raw_data["mu"].shape)
-    print(raw_data["logvar"].shape)
     # load preprocessed data
     if arglist.use_vae:
       data_mu = raw_data["mu"]
@@ -132,14 +129,12 @@ if __name__ == '__main__':
     max_seq_len = hps_model.max_seq_len
 
     N_data = len(data_action) # should be 10k
-    print(N_data)
     batch_size = hps_model.batch_size
     
-    print(data_mu.shape)
     # save 1000 initial mu and logvars:
     if arglist.use_vae:
       initial_mu = np.copy(data_mu[:1000, 0, :]*10000).astype(np.int).tolist()
-      initial_logvar = np.copy(data_logvar[:1000, 0, :]*10000).astype(np.int).tolist()
+      initial_logvar = np.copy(data_logvar[:1000][0][:]*10000).astype(np.int).tolist()
       with open(os.path.join("tf_initial_z", "initial_z.json"), 'wt') as outfile:
         json.dump([initial_mu, initial_logvar], outfile, sort_keys=True, indent=0, separators=(',', ': '))
 
