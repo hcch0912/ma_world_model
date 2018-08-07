@@ -24,13 +24,13 @@ def parse_args():
     parser.add_argument("--agent", type =str, default = 'DDPG', help = "agent type")
     parser.add_argument("--adv_agent", type = str, default = "script", help = "adv agent type")
     parser.add_argument("--game", type=str, default="Pong-2p-v0", help="name of the  env")
-    parser.add_argument("--timestep", type= int, default= 2, help ="the time step of act_trajectory")
+    parser.add_argument("--timestep", type= int, default= 5, help ="the time step of act_trajectory")
     parser.add_argument("--iteration", type=int, default=60000, help="number of episodes")
     parser.add_argument("--seed", type = int, default = 10, help = "random seed")
     parser.add_argument("--epoch", type = int, default = 10, help = "training epoch")
     parser.add_argument("--episodes", type = int, default = 100, help = "episodes")
     parser.add_argument("--steps", type = int, default = 50, help ="steps in one episode" )
-    parser.add_argument("--batch_size", type = int, default = 64, help = "set the batch_size")
+    parser.add_argument("--batch_size", type = int, default = 1000, help = "set the batch_size")
     parser.add_argument("--max_episode_len", type = int, default = 50, help = "max episode length")
     parser.add_argument("--warm_up_steps", type = int, default = 1000, help = "set the warm up steps")
     parser.add_argument("--lr", type = float, default = 0.0001, help = "learning rate")
@@ -40,7 +40,7 @@ def parse_args():
     parser.add_argument("--z_size", type = int, default = 32, help = "z size")
     parser.add_argument("--initial_z_save_path", type = str, default = "tf_initial_z", help = "intial_z")
     parser.add_argument("--series_dir", type = str, default = "./series")
-    parser.add_argument("--agent_num", type = int, default = 2, help = "agent number in the env")
+    parser.add_argument("--agent_num", type = int, default = 5, help = "agent number in the env")
     parser.add_argument("--action_space", type = int, default = 2, help = "action space size for each agent")
     parser.add_argument("--use_vae", type = bool, default = True, help ="use vae to get z")
     return parser.parse_args()
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         os.makedirs(arglist.initial_z_save_path)
 
     hps_model = build_hps(arglist)
-    print(hps_model.input_seq_width)
+    
     hps_sample = hps_model._replace(batch_size=1, max_seq_len=1, use_recurrent_dropout=0, is_training=0)
 
     raw_data = np.load(os.path.join(arglist.series_dir, "series.npz"))
@@ -130,9 +130,10 @@ if __name__ == '__main__':
     max_seq_len = hps_model.max_seq_len
 
     N_data = len(data_action) # should be 10k
+    print(N_data)
     batch_size = hps_model.batch_size
     
-    print(data_action.shape)
+    print(data_mu.shape)
     # save 1000 initial mu and logvars:
     if arglist.use_vae:
       initial_mu = np.copy(data_mu[:1000, 0, :]*10000).astype(np.int).tolist()
@@ -151,9 +152,11 @@ if __name__ == '__main__':
       step = rnn.sess.run(rnn.global_step)
       curr_learning_rate = (hps.learning_rate-hps.min_learning_rate) * (hps.decay_rate) ** step + hps.min_learning_rate
 
-      raw_z, raw_a ,raw_oppo_a= random_batch()
+      raw_z, raw_a ,raw_oppo_a= random_batch(arglist)
       print(raw_z.shape, raw_a.shape, raw_oppo_a.shape)
-      inputs = np.concatenate((raw_z[:, :-1, :], raw_a[:, :-1, :], [raw_oppo_a[:,:-1,:]]), axis=2)
+      raw_oppo_a = raw_oppo_a.reshape((len(raw_z), arglist.batch_size, -1 ))
+      print(raw_z.shape, raw_a.shape, raw_oppo_a.shape)
+      inputs = np.concatenate((raw_z[:, :-1, :], raw_a[:, :-1, :], raw_oppo_a[:, :-1, :]), axis=2)
       outputs = raw_z[:, 1:, :] # teacher forcing (shift by one predictions)
 
       feed = {rnn.input_x: inputs, rnn.output_x: outputs, rnn.lr: curr_learning_rate}

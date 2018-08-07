@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument("--epoch", type = int, default = 10, help = "training epoch")
     parser.add_argument("--episodes", type = int, default = 100, help = "episodes")
     parser.add_argument("--steps", type = int, default = 50, help ="steps in one episode" )
-    parser.add_argument("--batch_size", type = int, default = 1000, help = "set the batch_size")
+    parser.add_argument("--batch_size", type = int, default = 5000, help = "set the batch_size")
     parser.add_argument("--max_episode_len", type = int, default = 50, help = "max episode length")
     parser.add_argument("--warm_up_steps", type = int, default = 1000, help = "set the warm up steps")
     parser.add_argument("--lr", type = float, default = 0.0001, help = "learning rate")

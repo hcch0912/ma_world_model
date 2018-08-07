@@ -158,7 +158,15 @@ if __name__ == '__main__':
               recording_action = np.array(recording_action, dtype=np.float16)
               np.savez_compressed(prey_filename, obs=recording_obs[0], action=recording_action[0], oppo_actions = recording_action[1:])
               for i in range(1,5):
-                 np.savez_compressed(predator_filename, obs=recording_obs[i], action=recording_action[i], oppo_actions = np.array([recording_action[j] for j in range(len(recording_action)) if i != j]))
+                oppo_actions = []
+                oppo_actions.append(recording_action[0])
+                for j in range(1,5):
+                  if i ==j:
+                    continue
+                  else:
+                    oppo_actions.append(recording_action[i])
+                assert(len(oppo_actions)) == 4
+                np.savez_compressed(predator_filename, obs=recording_obs[i], action=recording_action[i], oppo_actions = oppo_actions )
             except gym.error.Error:
               print("stupid gym error, life goes on")
               env.close()

@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument("--epoch", type = int, default = 10, help = "training epoch")
     parser.add_argument("--episodes", type = int, default = 100, help = "episodes")
     parser.add_argument("--steps", type = int, default = 50, help ="steps in one episode" )
-    parser.add_argument("--batch_size", type = int, default = 1000, help = "set the batch_size")
+    parser.add_argument("--batch_size", type = int, default = 5000, help = "set the batch_size")
     parser.add_argument("--max_episode_len", type = int, default = 50, help = "max episode length")
     parser.add_argument("--warm_up_steps", type = int, default = 1000, help = "set the warm up steps")
     parser.add_argument("--lr", type = float, default = 0.0001, help = "learning rate")
@@ -57,6 +57,7 @@ def load_raw_data_list(filelist,arglist):
     oppo_action_list.append(raw_data['oppo_actions'])
     if ((i+1) % 1000 == 0):
       print("loading file", (i+1))
+  
   return data_list, action_list, oppo_action_list
 
 def encode_batch(batch_img,arglist):
@@ -64,6 +65,7 @@ def encode_batch(batch_img,arglist):
   simple_obs = simple_obs.reshape(arglist.batch_size, 64, 64, 3)
   mu, logvar = vae.encode_mu_logvar(simple_obs)
   z = (mu + np.exp(logvar/2.0) * np.random.randn(*logvar.shape))
+
   return mu, logvar, z
 
 def decode_batch(batch_z,arglist):
@@ -103,11 +105,10 @@ if __name__ == '__main__':
       
     mu_dataset = []
     logvar_dataset = []
-
     for i in range(len(dataset)):
       data_batch = dataset[i]
-      if len(data_batch) != arglist.batch_size:
-            break
+      # if len(data_batch) != arglist.batch_size:
+      #       break
       if arglist.use_vae :      
         mu, logvar, z = encode_batch(data_batch, arglist)
         mu_dataset.append(mu.astype(np.float16))
@@ -115,7 +116,6 @@ if __name__ == '__main__':
       
       if ((i+1) % 100 == 0):
         print(i+1)
-
     action_dataset = np.array(action_dataset)
     oppo_action_dataset = np.array(oppo_action_dataset)    
     if arglist.use_vae:
