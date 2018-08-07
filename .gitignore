@@ -1,0 +1,8 @@
+record/
+logs/
+__pycache__/
+image_data/
+ipynb_checkpoints
+tf_vae/
+rnn_vae/
+series/
