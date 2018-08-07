@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument("--view_size", type = int, default = 100, help = "POMDP, partial obs size")
     parser.add_argument("--agent_num", type = int, default = 5, help = "total number of agent")
     parser.add_argument("--action_space", type = int, default = 2, help = "action space for each agent")
-
+    parser.add_argument("--inference", type = bool, default = False, help = "use inference in policy or not")
     return parser.parse_args()
 
 
