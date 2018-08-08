@@ -87,7 +87,7 @@ def default_hps():
 
 def build_hps(arglist):
   return HyperParams(num_steps=4000,
-                     max_seq_len=999, # train on sequences of 1000 (so 999 + teacher forcing shift)
+                     max_seq_len= arglist.batch_size -1, # train on sequences of 1000 (so 999 + teacher forcing shift)
                      input_seq_width=32 + int(arglist.action_space*arglist.timestep*(arglist.agent_num - 1)),    # width of our data (32 + 3 actions)
                      output_seq_width=32,    # width of our data is 32
                      rnn_size=256,    # number of rnn cells
