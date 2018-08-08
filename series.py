@@ -117,8 +117,8 @@ if __name__ == '__main__':
         mu, logvar, z = encode_batch(data_batch, arglist)
         mu_dataset.append(mu.astype(np.float16))
         logvar_dataset.append(logvar.astype(np.float16))
-        action_dataset_real.append(action_dataset[i])
-        oppo_action_dataset_real.append(oppo_action_dataset[i])
+        action_dataset_real.append(action_dataset[i][:arglist.batch_size])
+        oppo_action_dataset_real.append(oppo_action_dataset[i][:arglist.batch_size])
       
       if ((i+1) % 100 == 0):
         print(i+1)
