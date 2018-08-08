@@ -290,16 +290,16 @@ def sample_sequence(sess, s_model, hps, init_z, actions, temperature=1.0, seq_le
     prev_state = next_state
 
   return strokes
+  `
+  def rnn_init_state(self, rnn):
+    return self.sess.run(self.initial_state)
 
-def rnn_init_state(rnn):
-  return rnn.sess.run(rnn.initial_state)
+  def rnn_next_state(self,rnn, z, a, act_traj, prev_state):
 
-def rnn_next_state(rnn, z, a, act_traj, prev_state):
-
-  at_size = len(act_traj) * len(act_traj[0]) * len(act_traj[0][0])
-  input_x = np.concatenate((z.reshape((1, 1, 32)), a.reshape((1, 1, len(a))), np.array(act_traj).reshape((1,1, at_size ))), axis=2)
-  feed = {rnn.input_x: input_x, rnn.initial_state:prev_state}
-  return rnn.sess.run(rnn.final_state, feed)
+    at_size = len(act_traj) * len(act_traj[0]) * len(act_traj[0][0])
+    input_x = np.concatenate((z.reshape((1, 1, 32)), a.reshape((1, 1, len(a))), np.array(act_traj).reshape((1,1, at_size ))), axis=2)
+    feed = {self.input_x: input_x, self.initial_state:prev_state}
+    return self.sess.run(self.final_state, feed)
 
 def rnn_output_size(mode):
   if mode == MODE_ZCH:
