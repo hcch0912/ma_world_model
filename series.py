@@ -115,19 +115,21 @@ if __name__ == '__main__':
         mu, logvar, z = encode_batch(data_batch, arglist)
         mu_dataset.append(mu.astype(np.float16))
         logvar_dataset.append(logvar.astype(np.float16))
+        action_dataset_real.append(action_dataset[i])
+        oppo_action_dataset_real.append(oppo_action_dataset[i])
       
       if ((i+1) % 100 == 0):
         print(i+1)
-    action_dataset = np.array(action_dataset)
-    oppo_action_dataset = np.array(oppo_action_dataset)    
+    # action_dataset = np.array(action_dataset)
+    # oppo_action_dataset = np.array(oppo_action_dataset)    
     if arglist.use_vae:
       mu_dataset = np.array(mu_dataset)
       logvar_dataset = np.array(logvar_dataset)
-      np.savez_compressed(os.path.join(arglist.series_dir, "series.npz"), action=action_dataset, oppo_action= oppo_action_dataset, mu=mu_dataset, logvar=logvar_dataset)
+      np.savez_compressed(os.path.join(arglist.series_dir, "series.npz"), action=action_dataset_real, oppo_action= oppo_action_dataset_real, mu=mu_dataset, logvar=logvar_dataset)
 
     else:  
       obs_dataset = np.array(dataset)  
-      np.savez_compressed(os.path.join(arglist.series_dir, "series.npz"), action=action_dataset, oppo_action= oppo_action_dataset, obs = obs_dataset)
+      np.savez_compressed(os.path.join(arglist.series_dir, "series.npz"), action=action_dataset_real, oppo_action= oppo_action_dataset_real, obs = obs_dataset)
 
     
 

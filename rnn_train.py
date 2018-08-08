@@ -48,7 +48,7 @@ def parse_args():
 
 
 def random_batch(arglist):
-  indices = np.random.permutation(N_data)[0:batch_size]
+  indices = np.random.permutation(len(data_action))[0:batch_size]
   action = data_action[indices]
   oppo_action = data_oppo_action[indices]
   if arglist.use_vae:
