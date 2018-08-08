@@ -105,6 +105,8 @@ if __name__ == '__main__':
       
     mu_dataset = []
     logvar_dataset = []
+    action_dataset_real = []
+    oppo_action_dataset_real = []
     for i in range(len(dataset)):
       data_batch = dataset[i]
       if len(data_batch) <= arglist.batch_size:
