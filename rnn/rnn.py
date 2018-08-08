@@ -226,6 +226,15 @@ class MDNRNN():
       qparams.append(p)
     with open(jsonfile, 'wt') as outfile:
       json.dump(qparams, outfile, sort_keys=True, indent=0, separators=(',', ': '))
+  def rnn_init_state(self):
+    return self.sess.run(self.initial_state)
+
+  def rnn_next_state(self, z, a, act_traj, prev_state):
+
+    at_size = len(act_traj) * len(act_traj[0]) * len(act_traj[0][0])
+    input_x = np.concatenate((z.reshape((1, 1, 32)), a.reshape((1, 1, len(a))), np.array(act_traj).reshape((1,1, at_size ))), axis=2)
+    feed = {self.input_x: input_x, self.initial_state:prev_state}
+    return self.sess.run(self.final_state, feed)
 
 def get_pi_idx(x, pdf):
   # samples from a categorial distribution
@@ -291,15 +300,6 @@ def sample_sequence(sess, s_model, hps, init_z, actions, temperature=1.0, seq_le
 
   return strokes
   `
-  def rnn_init_state(self, rnn):
-    return self.sess.run(self.initial_state)
-
-  def rnn_next_state(self,rnn, z, a, act_traj, prev_state):
-
-    at_size = len(act_traj) * len(act_traj[0]) * len(act_traj[0][0])
-    input_x = np.concatenate((z.reshape((1, 1, 32)), a.reshape((1, 1, len(a))), np.array(act_traj).reshape((1,1, at_size ))), axis=2)
-    feed = {self.input_x: input_x, self.initial_state:prev_state}
-    return self.sess.run(self.final_state, feed)
 
 def rnn_output_size(mode):
   if mode == MODE_ZCH:
